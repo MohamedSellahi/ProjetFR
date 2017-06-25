@@ -1,0 +1,42 @@
+Nptes from data sheet : 
+-----------------------
+Accellorometre: 
+Sample rate : 1kHz ;
+16 bit resolution;
+measurement are in twos complement format: 
+
+variable inportante : 
+ra, rg : Raw Vectors (from ADC)
+
+
+
+notion importantes: 
+user-programmable gyroscope full-scale range of 
+ ±250, ±500, ±1000, and ±2000°/sec (dps).
+ il se calcule: ar exemple : +-250 --> 250*2 / 2^16 = 0.007633f;
+
+  MPU6050_SCALE_250DPS ->  dpsPerDigit = .007633f; 
+	MPU6050_SCALE_500DPS ->  dpsPerDigit = .015267f;
+	MPU6050_SCALE_1000DPS -> dpsPerDigit = .030487f;
+  MPU6050_SCALE_2000DPS -> dpsPerDigit = .  ;
+
+
+
+
+
+
+The parts also have a user-programmable accelerometer full-scale range of
+ ±2g, ±4g, ±8g, and ±16g.
+ ca se calcul pareil: pour +-8g ---> 2*8/2^16 = 0.000244f;
+ 	MPU6050_RANGE_2G: rangePerDigit = .000061f;
+  MPU6050_RANGE_4G: rangePerDigit = .000122f;
+  MPU6050_RANGE_8G:  rangePerDigit = .000244f;
+  MPU6050_RANGE_16G: rangePerDigit = .0004882f;
+
+
+-----------------
+Benchmarking Serial.Print(): 
+printing 3 floats takes roughly : 1.5ms;
+
+
+
