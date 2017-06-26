@@ -1,33 +1,32 @@
 /*
- Name:		ArduinoMotionAquisitionFirmware.ino
- Created:	6/26/2017 4:01:00 PM
- Author:	34011-36-05
+Name:		ArduinoMotionAquisitionFirmware.ino
+Created:	6/26/2017 4:01:00 PM
+Author:	34011-36-05
 
- description:
- this is a code for interfacing the MPU6050 senser from a
- a C# application. 
- */
-
-
+description:
+this is a code for interfacing the MPU6050 senser from a
+a C# application.
+*/
 #include <Wire.h>
-#include <Arduino-MPU6050-master\MPU6050.h>
+#include <MPU6050.h>
+
 
 // represents a handle to MPU sensor 
-MPU6050 mpu; 
+MPU6050 mpu;
 
-/** The aqcuisition of measurement is triggered by a received command 
- from the PC. Supported commands are 
- s: for stop aqcuisition 
- t: send temperature 
- a: send acceleration
- g: send gyro measurements 
+/** The aqcuisition of measurement is triggered by a received command
+from the PC. Supported commands are
+s: for stop aqcuisition
+t: send temperature
+a: send acceleration
+g: send gyro measurements
 
 
- each data sent will be wrapped in a xml like element so to 
- delimite data of the same kind: 
- exemple a packet of tempreture mesurements well be sent in the 
- form <t> ... </t>
- */
+each data sent will be wrapped in a xml like element so to
+delimite data of the same kind:
+exemple a packet of tempreture mesurements well be sent in the
+form <t> ... </t>
+*/
 
 // Globals 
 char currCommand = 's';		// Current command that will be executed 
@@ -45,8 +44,11 @@ int8_t maxTrials = 5;	// max number of trials: when reached, we send
 						// a closing tag for the current aquisition
 
 
+int8_t tmpPackageCount = 10;
+int8_t accPackageCount = 10;
+int8_t gyrPackageCount = 10;
 
-// the setup function runs once when you press reset or power the board
+						// the setup function runs once when you press reset or power the board
 void setup() {
 	//  initialize serial communication to the given baud rate
 	Serial.begin(115200);
@@ -112,11 +114,10 @@ void loop() {
 // sendTemperatureData: sends temperature data, separated by 'delimiter'
 //  and opens/close the appropriate tags
 void sendTemperatureData(void) {
-
 	// is it the beginning of a transition 
 	// print <t>
 	if (currCommand != prevCommand) {
-
+		isFirstPacket = true;
 		// close the tag for the previous command
 		// if it was a valid command 
 		switch (prevCommand) {
@@ -128,17 +129,27 @@ void sendTemperatureData(void) {
 			Serial.print("</g>");
 			Serial.print("<t>");
 			break;
+		case 's':
+			Serial.print("<t>");
+			break;
 		default: // it was a stop or unknown command, print a starting tag for <t>  
 			Serial.print("<t>");
 			break;
 		}
 	}
 
+	if (!isFirstPacket) {
+		Serial.print(delimiter);
+	}
+
 	// Print temperature data, separated by delimiter
-	for (int8_t i = 0; i < 10; i++) {
+	int8_t i = 0;
+	for (; i < tmpPackageCount; i++) {
 		Serial.print(i);
 		Serial.print(delimiter);
 	}
+	Serial.print(i);
+	isFirstPacket = false;
 }
 
 
@@ -147,7 +158,7 @@ void sendAccelerationData(void) {
 	// is it the beginning of a transition 
 	// print <a>
 	if (currCommand != prevCommand) {
-
+		isFirstPacket = true;
 		// close the tag for the previous command
 		// if it was a valid command 
 		switch (prevCommand) {
@@ -159,14 +170,22 @@ void sendAccelerationData(void) {
 			Serial.print("</g>");
 			Serial.print("<a>");
 			break;
-		default: // it was a stop or unknown command, print a starting tag for <t>  
+		case 's':
+			Serial.print("<a>");
+			break;
+		default: // it was a stop or unknown command, print a starting tag for   
 			Serial.print("<a>");
 			break;
 		}
 	}
 
+	if (!isFirstPacket) {
+		Serial.print(delimiter);
+	}
+
 	// Print temperature data, separated by delimiter
-	for (int8_t i = 0; i < 10; i++) {
+	int8_t i = 0;
+	for (; i < accPackageCount; i++) {
 		Serial.print(i*1.5);
 		Serial.print(delimiter);
 		Serial.print(i*1.5);
@@ -174,6 +193,9 @@ void sendAccelerationData(void) {
 		Serial.print(i*1.5);
 		Serial.print(delimiter);
 	}
+	Serial.print(i*1.5);
+	isFirstPacket = false;
+
 }
 
 // send Gyro data 
@@ -181,7 +203,7 @@ void sendGyroData(void) {
 	// is it the beginning of a transition 
 	// print <g>
 	if (currCommand != prevCommand) {
-
+		isFirstPacket = true;
 		// close the tag for the previous command
 		// if it was a valid command 
 		switch (prevCommand) {
@@ -193,14 +215,22 @@ void sendGyroData(void) {
 			Serial.print("</a>");
 			Serial.print("<g>");
 			break;
+		case 's':
+			Serial.print("<g>");
+			break;
 		default: // it was a stop or unknown command, print a starting tag for <t>  
 			Serial.print("<g>");
 			break;
 		}
 	}
 
+	if (!isFirstPacket) {
+		Serial.print(delimiter);
+	}
+
 	// Print temperature data, separated by delimiter
-	for (int8_t i = 0; i < 10; i++) {
+	int8_t i = 0;
+	for (; i < 10; i++) {
 		Serial.print(i*1.5);
 		Serial.print(delimiter);
 		Serial.print(i*1.5);
@@ -208,6 +238,9 @@ void sendGyroData(void) {
 		Serial.print(i*1.5);
 		Serial.print(delimiter);
 	}
+	Serial.print(i*1.5);
+	isFirstPacket = false;
+
 }
 
 
@@ -221,6 +254,8 @@ void closeCurrentDataTag(void) {
 		return;
 	case 'g':
 		Serial.print("</g>");
+		return;
+	case 's':
 		return;
 	default:
 		return;
